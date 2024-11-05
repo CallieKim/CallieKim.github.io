@@ -3,7 +3,7 @@ title: "Understanding Large-Language Model (LLM)-powered Human-Robot Interaction
 collection: publications
 permalink: /publication/HRI24
 excerpt:
-date: 2022-03-11
+date: 2024-03-11
 venue: "Proceedings of the 2024 ACM/IEEE International Conference on Human-Robot Interaction (HRI 24)"
 paperurl:
 citation: "Callie Y. Kim*, Christine P. Lee*, and Bilge Mutlu. 2024. Understanding Large-Language Model (LLM)-powered Human-Robot Interaction. In Proceedings of the 2024 ACM/IEEE International Conference on Human-Robot Interaction (HRI '24). Association for Computing Machinery, New York, NY, USA, 371–380."
