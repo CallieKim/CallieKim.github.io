@@ -16,5 +16,5 @@ Currently, I am exploring interactive feedback frameworks to refine LLM-generate
 
 ## Research Interests
 
-[Download my CV]() \
+[Download my CV](https://drive.google.com/file/d/1Ce_ymS0y0imHZvwUKeUA04CQU2e4Aq7E/view?usp=sharing) \
 [My Google Scholar](https://scholar.google.com/citations?user=CbMSclwAAAAJ&hl=en)
