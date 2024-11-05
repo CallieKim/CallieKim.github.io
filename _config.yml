@@ -12,7 +12,7 @@ title: "Callie Y. Kim"
 title_separator: "-"
 name: &name "Callie Y. Kim"
 description: &description "Personal Website"
-url: https://calliekim.github.io # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
+url: https:callie-kim.com # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl: "" # the subpath of your site, e.g. "/blog"
 repository: "CallieKim/CallieKim.github.io"
 
