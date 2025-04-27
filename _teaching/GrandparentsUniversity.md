@@ -4,7 +4,7 @@ collection: teaching
 type: "Workshop"
 permalink: "/teaching/gpu"
 venue: "University of Wisconsin-Madison"
-date: 2022-07-01, 2023-07-01, 2024-07-01
+date: 2024-07-01
 location: "Madison, WI"
 ---
 
