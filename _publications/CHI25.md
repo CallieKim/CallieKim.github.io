@@ -2,7 +2,7 @@
 title: "Bridging Generations using AI-Supported Co-Creative Activities"
 collection: publications
 permalink: /publication/CHI25
-excerpt: "<img width='400px' src='/images/GPU_Teaser.png'>"
+excerpt: "<img width='600px' src='/images/GPU_Teaser.png'>"
 date: 2025-04-25
 venue: "Proceedings of the 2025 CHI Conference on Human Factors in Computing Systems (CHI 25)"
 paperurl:

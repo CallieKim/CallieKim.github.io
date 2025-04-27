@@ -2,7 +2,7 @@
 title: "Understanding Large-Language Model (LLM)-powered Human-Robot Interaction"
 collection: publications
 permalink: /publication/HRI24
-excerpt:
+excerpt: "<img width='600px' src='/images/new_teaser.png'>"
 date: 2024-03-11
 venue: "Proceedings of the 2024 ACM/IEEE International Conference on Human-Robot Interaction (HRI 24)"
 paperurl:
