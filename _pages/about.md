@@ -8,7 +8,7 @@ redirect_from:
   - /about.html
 ---
 
-Hi, I am a fourth-year PhD student in the [People and Robots Laboratory](https://peopleandrobots.wisc.edu/staff/kim-callie/) at the Computer Sciences Department of University of Wisconsin-Madison, advised by [Bilge Mutlu](http://bilgemutlu.com). I completed my BS in Computer Science and Engineering at Ewha Womans University in 2019 and my MS in Computer Science at the University of Maryland in 2021.
+Hi, I am a fifth-year PhD student in the [People and Robots Laboratory](https://peopleandrobots.wisc.edu/staff/kim-callie/) at the Computer Sciences Department of University of Wisconsin-Madison, advised by [Bilge Mutlu](http://bilgemutlu.com). I completed my BS in Computer Science and Engineering at Ewha Womans University in 2019 and my MS in Computer Science at the University of Maryland in 2021.
 
 ## Research Interests
 My research focuses on human-centered approaches to improve interactions between users and AI-driven robotic systems. I explore methods to enhance feedback mechanisms and system reliability, with applications in robotics, human-computer interaction, and artificial intelligence. 
