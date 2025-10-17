@@ -15,6 +15,6 @@ You can download my full resume [here](/files/resume_update_website.pdf)
 
 # Education
 
-- Ph.D. in Computer Sciences, University of Wisconsin-Madison, 2026 (expected)
+- Ph.D. in Computer Sciences, University of Wisconsin-Madison, 2027 (expected)
 - M.S. in Computer Science, University of Maryland, 2021
 - B.S. in Computer Science and Engineering, Ewha Womans University, South Korea, 2019
