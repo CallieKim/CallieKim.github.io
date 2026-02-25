@@ -5,23 +5,17 @@ excerpt: "Past and current projects"
 author_profile: true
 ---
 
-<div class="fade-in">
+<div class="fade-in" markdown="1">
 
 A collection of projects from my research and undergrad years — spanning robotics, game development, and more.
 
 </div>
 
-<div class="fade-in fade-in--delay-1">
+<div class="fade-in fade-in--delay-1" markdown="1">
 
 ## Research Projects
 
 <div class="project-grid">
-
-<div class="project-card">
-  <h3>RoboGround</h3>
-  <span class="project-tag">XR / Robotics</span>
-  <p>Mixed-initiative interactive task planning in XR for end-user robot programming.</p>
-</div>
 
 <div class="project-card">
   <h3>RoboCritics</h3>
@@ -39,7 +33,7 @@ A collection of projects from my research and undergrad years — spanning robot
 
 </div>
 
-<div class="fade-in fade-in--delay-2">
+<div class="fade-in fade-in--delay-2" markdown="1">
 
 ## Game Development
 
