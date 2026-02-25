@@ -7,7 +7,7 @@ author_profile: true
 
 <div class="fade-in" markdown="1">
 
-A collection of projects from my research and undergrad years — spanning robotics, game development, and more.
+A collection of projects from my research and undergrad years, spanning robotics, game development, and more.
 
 </div>
 
@@ -19,14 +19,13 @@ A collection of projects from my research and undergrad years — spanning robot
 
 <div class="project-card">
   <h3>RoboCritics</h3>
-  <span class="project-tag">HRI / LLM</span>
-  <p>Multi-agent LLM framework for verifying and critiquing robot task plans through interactive feedback.</p>
+  <p>An approach that augments LLM-based robot programming with expert-informed motion-level critics that analyze execution traces for safety violations, surface transparent feedback, and offer one-click fixes, enabling iterative refinement while keeping users in the loop.</p>
 </div>
 
 <div class="project-card">
   <h3>RoboBlocks</h3>
-  <span class="project-tag">HCI / End-User Programming</span>
   <p>Block-based scaffolding system that helps non-expert users express task intent for robot programming.</p>
+  <a href="https://robo-blocks.com/" class="project-link">View Project &rarr;</a>
 </div>
 
 </div>
@@ -43,21 +42,18 @@ Projects from my undergraduate years at Ewha Womans University.
 
 <div class="project-card">
   <h3><!-- Game Title --></h3>
-  <span class="project-tag"><!-- Genre / Engine --></span>
   <p><!-- Brief description of the game, your role, and what you built. --></p>
   <!-- <a href="#" class="project-link">View Project &rarr;</a> -->
 </div>
 
 <div class="project-card">
   <h3><!-- Game Title --></h3>
-  <span class="project-tag"><!-- Genre / Engine --></span>
   <p><!-- Brief description of the game, your role, and what you built. --></p>
   <!-- <a href="#" class="project-link">View Project &rarr;</a> -->
 </div>
 
 <div class="project-card">
   <h3><!-- Game Title --></h3>
-  <span class="project-tag"><!-- Genre / Engine --></span>
   <p><!-- Brief description of the game, your role, and what you built. --></p>
   <!-- <a href="#" class="project-link">View Project &rarr;</a> -->
 </div>
