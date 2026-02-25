@@ -81,14 +81,14 @@ Projects from my undergraduate years at Ewha Womans University.
   </div>
 </div>
 
-<div class="project-card">
+<a href="/projects/bear-farm/" class="project-card">
   <img src="/images/bear_farm_title.PNG" alt="Bear Farm" class="project-thumb">
   <div class="project-title">Bear Farm</div>
   <div class="project-overlay">
-    <span class="project-meta">Mobile &middot; Casual &middot; 2018</span>
-    <a href="https://github.com/CallieKim/Bear-Farm" class="project-link">View Project &rarr;</a>
+    <span class="project-meta">Mobile VR &middot; Casual &middot; 2018</span>
+    <span class="project-link">View Details &rarr;</span>
   </div>
-</div>
+</a>
 
 <div class="project-card">
   <img src="/images/letter_title.JPG" alt="Letter" class="project-thumb">
