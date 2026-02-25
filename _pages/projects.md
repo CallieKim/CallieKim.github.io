@@ -26,19 +26,27 @@ A collection of projects from my research and undergrad years, spanning robotics
 </div>
 
 <div class="project-card">
-  <img src="/images/CoframeAR_title.jpeg" alt="CoframeAR" class="project-thumb">
-  <div class="project-title">CoframeAR</div>
-  <div class="project-overlay">
-    <p>AR-based co-design framework for human-robot collaboration.</p>
-  </div>
-</div>
-
-<div class="project-card">
   <img src="/images/roboblocks_title.jpg" alt="RoboBlocks" class="project-thumb">
   <div class="project-title">RoboBlocks</div>
   <div class="project-overlay">
     <p>Block-based scaffolding system that helps non-expert users express task intent for robot programming.</p>
     <a href="https://robo-blocks.com/" class="project-link">View Project &rarr;</a>
+  </div>
+</div>
+
+<div class="project-card">
+  <img src="/images/CoframeAR_title.jpeg" alt="CoframeAR" class="project-thumb">
+  <div class="project-title">CoframeAR</div>
+  <div class="project-overlay">
+    <p>Robot Programming Interface in AR for Novice Programmers</p>
+  </div>
+</div>
+
+<div class="project-card">
+  <img src="/images/custom_vr_mask_title.PNG" alt="Custom VR Headset" class="project-thumb">
+  <div class="project-title">Custom VR Headset for People with Visual Impairments</div>
+  <div class="project-overlay">
+    <p>Custom VR headset designed to accommodate people with visual impairments.</p>
   </div>
 </div>
 

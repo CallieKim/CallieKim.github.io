@@ -27,4 +27,4 @@ RUN gem install bundler:2.3.26
 RUN bundle install
 
 # Command to serve the Jekyll site
-CMD ["jekyll", "serve", "-H", "0.0.0.0", "-w"]
+CMD ["jekyll", "serve", "-H", "0.0.0.0", "-w", "--force_polling"]
