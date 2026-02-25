@@ -1,0 +1,90 @@
+/* ==========================================================================
+   CUSTOM STYLES
+   ========================================================================== */
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced link hover transitions */
+.page__content a {
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Project grid layout */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25em;
+  margin-top: 1em;
+  margin-bottom: 1.5em;
+}
+
+/* Project cards */
+.project-card {
+  padding: 1.25em;
+  border: 1px solid $border-color;
+  border-radius: 6px;
+  background: $body-color;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(#000, 0.08);
+  }
+
+  h3 {
+    margin-top: 0;
+    margin-bottom: 0.4em;
+    font-size: $type-size-5;
+  }
+
+  p {
+    font-size: $type-size-6;
+    color: $text-color;
+    margin-bottom: 0.5em;
+  }
+}
+
+.project-tag {
+  display: inline-block;
+  padding: 0.15em 0.55em;
+  margin-bottom: 0.6em;
+  font-size: $type-size-7;
+  font-weight: 600;
+  color: $info-color;
+  border: 1px solid $info-color;
+  border-radius: 3px;
+}
+
+.project-link {
+  font-size: $type-size-6;
+  font-weight: 600;
+  text-decoration: none;
+  color: $info-color;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: $link-color-hover;
+  }
+}
+
+/* Sidebar avatar hover */
+.author__avatar img {
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+/* Navigation link transitions */
+.greedy-nav a {
+  transition: color 0.2s ease;
+}
+
+/* Author profile social link hover */
+.author__urls-wrapper .social-icons a {
+  transition: color 0.2s ease;
+}
