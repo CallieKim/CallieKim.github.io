@@ -2,6 +2,289 @@
    CUSTOM STYLES
    ========================================================================== */
 
+/* ==========================================================================
+   HOMEPAGE LAYOUT
+   ========================================================================== */
+
+/* Robot panel — fixed to left edge */
+.homepage-robot-panel {
+  position: fixed;
+  top: $masthead-height;
+  left: 0;
+  width: 420px;
+  height: calc(100vh - #{$masthead-height});
+  z-index: 1;
+  overflow: visible;
+}
+
+.robot-sidebar {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(160deg, #1A2332 0%, #2C3E50 50%, #1A2332 100%);
+
+  #robot-sidebar-canvas {
+    position: relative;
+    width: 100%;
+    height: 100%;
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+
+/* Animated wave edge between robot panel and content */
+.robot-sidebar__wave {
+  position: absolute;
+  top: 0;
+  right: -100px;
+  width: 100px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Research keyword pills */
+.robot-sidebar__keywords {
+  position: absolute;
+  bottom: 2em;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5em;
+  padding: 0 1.25em;
+  z-index: 3;
+}
+
+.keyword-pill {
+  display: inline-block;
+  padding: 0.3em 0.75em;
+  font-size: $type-size-7;
+  font-family: $sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  animation: pill-float 4s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+
+  &:hover {
+    color: #00BFA5;
+    border-color: rgba(#00BFA5, 0.4);
+    background: rgba(#00BFA5, 0.1);
+  }
+}
+
+@keyframes pill-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* Mode toggle button */
+.robot-mode-btn {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  padding: 0.35em 0.85em;
+  font-size: $type-size-7;
+  font-family: $sans-serif;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+
+  &:hover {
+    color: #00BFA5;
+    background: rgba(#00BFA5, 0.12);
+    border-color: rgba(#00BFA5, 0.35);
+  }
+}
+
+/* Score display */
+.robot-score {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 0.3em 0.7em;
+  font-size: $type-size-4;
+  font-family: $monospace;
+  font-weight: 700;
+  color: #00BFA5;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(#00BFA5, 0.3);
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* +1 floating animation */
+.robot-plus-one {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  z-index: 11;
+  font-size: 1.8em;
+  font-weight: 800;
+  font-family: $monospace;
+  color: #00BFA5;
+  pointer-events: none;
+  animation: plus-one-float 0.9s ease-out forwards;
+  text-shadow: 0 0 12px rgba(#00BFA5, 0.5);
+}
+
+@keyframes plus-one-float {
+  0% {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50px);
+    opacity: 0;
+  }
+}
+
+/* Content — centered like reference site */
+#main.homepage-layout {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2em 2.5rem;
+}
+
+.homepage-content__inner {
+  max-width: 800px;
+}
+
+/* Inline profile */
+.homepage-profile {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+  margin-bottom: 1.5em;
+}
+
+.homepage-profile__avatar {
+  flex-shrink: 0;
+
+  img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 3px solid $border-color;
+    object-fit: cover;
+  }
+}
+
+.homepage-profile__name {
+  margin: 0 0 0.25em;
+  font-size: $type-size-2;
+}
+
+.homepage-profile__bio {
+  margin: 0 0 0.25em;
+  color: $gray;
+  font-size: $type-size-5;
+}
+
+.homepage-profile__location {
+  margin: 0;
+  color: $gray;
+  font-size: $type-size-6;
+}
+
+/* Social link buttons */
+.homepage-social-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin-bottom: 2em;
+}
+
+.btn--social {
+  font-size: $type-size-6;
+  padding: 0.5em 0.9em;
+  border-radius: $border-radius;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  color: #fff;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.15s ease;
+
+  &:hover {
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  i {
+    font-size: 1.1em;
+  }
+}
+
+.btn--scholar {
+  background-color: #4285f4;
+  &:hover { background-color: mix(#000, #4285f4, 15%); }
+}
+
+.btn--linkedin {
+  background-color: $linkedin-color;
+  &:hover { background-color: mix(#000, $linkedin-color, 15%); }
+}
+
+.btn--github {
+  background-color: $github-color;
+  &:hover { background-color: mix(#000, $github-color, 15%); }
+}
+
+.btn--orcid {
+  background-color: #a6ce39;
+  &:hover { background-color: mix(#000, #a6ce39, 15%); }
+}
+
+.btn--email {
+  background-color: $primary-color;
+  &:hover { background-color: mix(#000, $primary-color, 15%); }
+}
+
+/* Hide robot panel on smaller screens */
+@media screen and (max-width: $large) {
+  .homepage-robot-panel {
+    display: none;
+  }
+}
+
+@media screen and (max-width: $medium) {
+  #main.homepage-layout {
+    padding: 1.5em 1em;
+  }
+
+  .homepage-profile {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .homepage-social-buttons {
+    justify-content: center;
+  }
+}
+
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
@@ -56,7 +339,7 @@ a.project-card {
     font-size: $type-size-5;
     font-weight: 700;
     color: #fff;
-    background: linear-gradient(transparent, rgba(#000, 0.7));
+    background: linear-gradient(transparent, rgba(#1A2332, 0.8));
     transition: opacity 0.3s ease;
   }
 
@@ -69,7 +352,7 @@ a.project-card {
     align-items: center;
     text-align: center;
     padding: 1.25em;
-    background: rgba(#000, 0.75);
+    background: rgba(#1A2332, 0.85);
     opacity: 0;
     transition: opacity 0.3s ease;
 
@@ -102,15 +385,15 @@ a.project-card {
   font-size: $type-size-6;
   font-weight: 600;
   text-decoration: none;
-  color: #fff;
+  color: #00BFA5;
   padding: 0.35em 0.9em;
-  border: 1px solid rgba(#fff, 0.6);
+  border: 1px solid #00BFA5;
   border-radius: 4px;
   transition: background 0.2s ease, border-color 0.2s ease;
 
   &:hover {
-    background: rgba(#fff, 0.15);
-    border-color: #fff;
+    background: rgba(#00BFA5, 0.15);
+    border-color: #00BFA5;
     color: #fff;
   }
 }

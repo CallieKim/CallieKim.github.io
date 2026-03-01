@@ -1,0 +1,42 @@
+<div class="robot-sidebar">
+  <div id="robot-sidebar-canvas"></div>
+  <div class="robot-sidebar__keywords">
+    <span class="keyword-pill" style="--delay: 0s">HRI</span>
+    <span class="keyword-pill" style="--delay: 0.5s">AR/VR</span>
+    <span class="keyword-pill" style="--delay: 1.0s">LLMs</span>
+    <span class="keyword-pill" style="--delay: 1.5s">End-User Programming</span>
+    <span class="keyword-pill" style="--delay: 2.0s">Multi-Agent</span>
+  </div>
+  <svg class="robot-sidebar__wave" viewBox="0 0 120 1000" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path class="wave-path wave-path--back" d="" fill="rgba(26,35,50,0.35)"/>
+    <path class="wave-path wave-path--front" d="" fill="#1A2332"/>
+  </svg>
+  <script>
+    (function(){
+      var paths = document.querySelectorAll('.wave-path');
+      if (!paths.length) return;
+      // Gentle, broad wave — like the horizontal section divider but rotated vertical
+      function wave(t, shift) {
+        var d = 'M0,0';
+        for (var y = 0; y <= 1000; y += 2) {
+          var n = y / 1000; // 0→1 normalized
+          // One broad hill + gentle secondary ripple, very slow drift
+          var x = 20
+            + Math.sin(n * Math.PI * 1.2 + t) * 42
+            + Math.sin(n * Math.PI * 2.4 + t * 0.6 + shift) * 14
+            + Math.sin(n * Math.PI * 0.5 + t * 0.3 + shift * 2) * 10;
+          d += ' L' + Math.max(0, x).toFixed(1) + ',' + y;
+        }
+        d += ' L120,1000 L120,0 Z';
+        return d;
+      }
+      function tick(ts) {
+        var t = ts * 0.0004; // very slow
+        paths[0].setAttribute('d', wave(t * 0.8, 0.8));
+        paths[1].setAttribute('d', wave(t, 0));
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</div>

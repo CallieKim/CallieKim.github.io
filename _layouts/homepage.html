@@ -1,0 +1,23 @@
+---
+layout: default
+---
+
+{% include base_path %}
+
+<div id="main" role="main" class="homepage-layout">
+  <div class="homepage-robot-panel">
+    {% include robot-sidebar.html %}
+  </div>
+
+  <article class="homepage-content" itemscope itemtype="http://schema.org/CreativeWork">
+    <div class="homepage-content__inner">
+
+      {% include homepage-profile.html %}
+
+      <section class="page__content" itemprop="text">
+        {{ content }}
+      </section>
+
+    </div>
+  </article>
+</div>

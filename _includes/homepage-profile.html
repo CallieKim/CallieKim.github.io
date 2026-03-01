@@ -1,0 +1,55 @@
+{% include base_path %}
+
+{% if page.author and site.data.authors[page.author] %}
+  {% assign author = site.data.authors[page.author] %}
+{% else %}
+  {% assign author = site.author %}
+{% endif %}
+
+<div class="homepage-profile">
+  <div class="homepage-profile__avatar">
+    {% if author.avatar contains "://" %}
+      <img src="{{ author.avatar }}" alt="{{ author.name }}">
+    {% else %}
+      <img src="{{ author.avatar | prepend: '/images/' | prepend: base_path }}" alt="{{ author.name }}">
+    {% endif %}
+  </div>
+
+  <div class="homepage-profile__info">
+    <h1 class="homepage-profile__name">{{ author.name }}</h1>
+    {% if author.bio %}<p class="homepage-profile__bio">{{ author.bio }}</p>{% endif %}
+    {% if author.location %}
+      <p class="homepage-profile__location">
+        <i class="fa-solid fa-location-dot" aria-hidden="true"></i> {{ author.location }}
+      </p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="homepage-social-buttons">
+  {% if author.googlescholar %}
+    <a href="{{ author.googlescholar }}" class="btn btn--social btn--scholar" target="_blank" rel="noopener">
+      <i class="ai ai-google-scholar"></i> Google Scholar
+    </a>
+  {% endif %}
+  {% if author.linkedin %}
+    <a href="https://www.linkedin.com/in/{{ author.linkedin }}" class="btn btn--social btn--linkedin" target="_blank" rel="noopener">
+      <i class="fab fa-linkedin"></i> LinkedIn
+    </a>
+  {% endif %}
+  {% if author.github %}
+    <a href="https://github.com/{{ author.github }}" class="btn btn--social btn--github" target="_blank" rel="noopener">
+      <i class="fab fa-github"></i> GitHub
+    </a>
+  {% endif %}
+  {% if author.orcid %}
+    <a href="{{ author.orcid }}" class="btn btn--social btn--orcid" target="_blank" rel="noopener">
+      <i class="ai ai-orcid"></i> ORCID
+    </a>
+  {% endif %}
+  {% if author.email %}
+    <a href="mailto:{{ author.email }}" class="btn btn--social btn--email">
+      <i class="fas fa-envelope"></i> Email
+    </a>
+  {% endif %}
+</div>

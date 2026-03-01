@@ -2,7 +2,8 @@
 permalink: /
 title: "About me"
 excerpt: "About me"
-author_profile: true
+layout: homepage
+author_profile: false
 redirect_from:
   - /about/
   - /about.html
@@ -27,12 +28,5 @@ My research focuses on human-centered approaches to end-user robot programming. 
 ## Beyond Research
 
 When I'm not working on robots, I enjoy reading books and playing games, especially RPGs. I also have a background in game development from my undergrad years, which you can check out on my [Projects](/projects/) page.
-
-</div>
-
-<div class="fade-in fade-in--delay-1" markdown="1">
-
-[Download my CV](https://drive.google.com/file/d/1sLyyP6G6Nf1AuA0r6usbtLIZHyeu1lS0/view?usp=sharing) \
-[My Google Scholar](https://scholar.google.com/citations?user=CbMSclwAAAAJ&hl=en)
 
 </div>
