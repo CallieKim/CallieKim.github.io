@@ -63,8 +63,8 @@ Projects from my undergraduate years at Ewha Womans University.
 <div class="project-grid">
 
 <div class="project-card">
-  <img src="/images/school_bomb_title.JPG" alt="School Bomb" class="project-thumb">
-  <div class="project-title">School Bomb</div>
+  <img src="/images/school_bomb_title.JPG" alt="Undergraduate Simulation" class="project-thumb">
+  <div class="project-title">Undergraduate Simulation</div>
   <div class="project-overlay">
     <span class="project-meta">PC &middot; Action &middot; 2017</span>
     <a href="https://github.com/CallieKim/School-Bomb" class="project-link">View Project &rarr;</a>
