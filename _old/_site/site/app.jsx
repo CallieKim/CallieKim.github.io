@@ -62,7 +62,7 @@ function LeftRail() {
       </dl>
       <div className="rail-links">
         <div className="mono-label">contact</div>
-        <a href="mailto:cyekim@wisc.edu" className="rail-link">cyekim@wisc.edu<span className="arr">↗</span></a>
+        <a href="mailto:cykim6@wisc.edu" className="rail-link">cykim6@wisc.edu<span className="arr">↗</span></a>
         <a href="#" className="rail-link">Google Scholar<span className="arr">↗</span></a>
         <a href="https://github.com/CallieKim" className="rail-link">GitHub<span className="arr">↗</span></a>
         <a href="#" className="rail-link">ORCID<span className="arr">↗</span></a>
@@ -191,7 +191,7 @@ function Footer() {
     <footer className="foot">
       <div className="mono-label">end of page · thanks for reading</div>
       <div className="foot-links">
-        <a href="mailto:cyekim@wisc.edu">cyekim@wisc.edu</a>
+        <a href="mailto:cykim6@wisc.edu">cykim6@wisc.edu</a>
         <span className="foot-sep">·</span>
         <a href="#">CV</a>
         <span className="foot-sep">·</span>

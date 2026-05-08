@@ -11,7 +11,7 @@ redirect_from:
 
 <div class="fade-in" markdown="1">
 
-Hi, I am a fifth-year PhD candidate in the [People and Robots Laboratory](https://peopleandrobots.wisc.edu/staff/kim-callie/) at the Computer Sciences Department of University of Wisconsin-Madison, advised by [Bilge Mutlu](http://bilgemutlu.com). I completed my BS in Computer Science and Engineering at Ewha Womans University in 2019 and my MS in Computer Science at the University of Maryland in 2021.
+Hi, I am a fifth-year PhD candidate in the [People and Robots Laboratory](https://peopleandrobots.wisc.edu/) at the Computer Sciences Department of University of Wisconsin-Madison, advised by [Bilge Mutlu](http://bilgemutlu.com). I completed my BS in Computer Science and Engineering at Ewha Womans University in 2019 and my MS in Computer Science at the University of Maryland in 2021.
 
 </div>
 
