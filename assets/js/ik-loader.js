@@ -1,20 +1,28 @@
-import init, { Solver } from "/assets/robot/lively/lively_tk_lib.js";
+// Lively 1.1.0 (@people_and_robots/lively) — bundler-target build, so we
+// instantiate the WASM manually and hand it to the JS glue module.
+import * as bg from "/assets/robot/lively/lively_bg.js";
 
 (async function () {
   try {
-    await init("/assets/robot/lively/lively_tk_lib_bg.wasm");
+    var wasmResp = await fetch("/assets/robot/lively/lively_bg.wasm");
+    var wasmBytes = await wasmResp.arrayBuffer();
+    var wasmModule = await WebAssembly.instantiate(wasmBytes, {
+      "./lively_bg.js": bg,
+    });
+    bg.__wbg_set_wasm(wasmModule.instance.exports);
 
     var urdfResp = await fetch("/assets/robot/ur3/ur3e.urdf");
     var urdfStr = await urdfResp.text();
 
-    var objectives = [
-      { type: "PositionMatch", name: "EE Pos", link: "tool0", weight: 50 },
-      { type: "SmoothnessMacro", name: "Smooth", weight: 20 },
-      { type: "CollisionAvoidance", name: "Collision", weight: 10 },
-      // Orientation goal for tool0 — weight 0 in interactive mode (free),
-      // raised in score mode to keep the gripper facing down
-      { type: "OrientationMatch", name: "EE Rot", link: "tool0", weight: 0 },
-    ];
+    // Keyed objectives (v1 API). Weights here are defaults; every solve()
+    // call passes its own weights table with the same keys.
+    var objectives = {
+      position: { type: "PositionMatch", name: "EE Pos", link: "tool0", weight: 50 },
+      smoothness: { type: "SmoothnessMacro", name: "Smooth", weight: 20 },
+      collision: { type: "CollisionAvoidance", name: "Collision", weight: 10 },
+      // Keeps the gripper facing down in both interactive and score mode
+      orientation: { type: "OrientationMatch", name: "EE Rot", link: "tool0", weight: 25 },
+    };
 
     var rootBounds = [
       { value: 0, delta: 0 },
@@ -26,6 +34,7 @@ import init, { Solver } from "/assets/robot/lively/lively_tk_lib.js";
     ];
 
     // Ground plane for collision avoidance (thin box at z=0 in URDF frame)
+    // NOTE: v1 quaternions are [x, y, z, w]
     var shapes = [
       {
         type: "Box",
@@ -37,43 +46,54 @@ import init, { Solver } from "/assets/robot/lively/lively_tk_lib.js";
         z: 0.01,
         localTransform: {
           translation: [0, 0, -0.005],
-          rotation: [1, 0, 0, 0],
+          rotation: [0, 0, 0, 1],
         },
       },
     ];
 
+    // Precomputed IK solution for hovering above the cube (scene
+    // [0.2, 0.15, 0.15], gripper facing down) — both modes start here
     var initialJoints = {
-      shoulder_pan_joint: 0,
-      shoulder_lift_joint: -0.8,
-      elbow_joint: 1.0,
-      wrist_1_joint: -0.3,
-      wrist_2_joint: 0,
-      wrist_3_joint: 0,
+      shoulder_pan_joint: -2.7071,
+      shoulder_lift_joint: -1.9369,
+      elbow_joint: 2.0829,
+      wrist_1_joint: -1.7207,
+      wrist_2_joint: -1.5688,
+      wrist_3_joint: -1.1363,
     };
 
-    var solver = new Solver(
+    var solver = new bg.Solver(
       urdfStr,
       objectives,
       rootBounds,
       shapes,
       {
-        origin: { translation: [0, 0, 0], rotation: [1, 0, 0, 0] },
+        origin: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
         joints: initialJoints,
       },
-      true,
       1,
       25,
+      undefined,
     );
 
     console.log("[IK] Solver initialized");
-    console.log("[IK] Objectives:", solver.objectives);
-    console.log("[IK] Current goals:", solver.currentGoals);
-    console.log("[IK] Joints:", solver.joints);
-    console.log("[IK] Links:", solver.links);
+
+    // Normalize collision distances (samples 1000 random states, stores
+    // average-distance table inside the solver's collision manager) so
+    // permanently-close link pairs don't produce constant penalties
+    var t0 = performance.now();
+    var table = solver.computeAverageDistanceTable();
+    console.log(
+      "[IK] Distance table:",
+      table && table.length,
+      "pairs in",
+      Math.round(performance.now() - t0),
+      "ms",
+    );
 
     var testResult = solver.solve(
-      [{ Translation: [0.2, 0, 0.3] }, null, null, null],
-      [50, 20, 10, 0],
+      { position: { Translation: [0.2, 0, 0.3] } },
+      { position: 50, smoothness: 20, collision: 10, orientation: 25 },
       0,
       [],
     );

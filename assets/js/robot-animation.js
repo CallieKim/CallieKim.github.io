@@ -87,7 +87,7 @@
   // ========== UR3e KINEMATIC CHAIN ==========
   var robotRoot = new THREE.Group();
   robotRoot.rotation.x = -HALF_PI;
-  robotRoot.rotation.z = -PI * 1.5;
+  robotRoot.rotation.z = -PI * 0.5; // 180deg from before: arm faces the viewer
   scene.add(robotRoot);
 
   var baseLink = new THREE.Group();
@@ -312,48 +312,60 @@
   scoreEl.style.display = "none";
   container.appendChild(scoreEl);
 
-  modeBtn.addEventListener("click", function () {
-    if (currentMode === MODE_INTERACTIVE) {
-      currentMode = MODE_SCORE;
-      modeBtn.innerHTML = "&#9881; Interactive";
-      scoreEl.style.display = "flex";
-      cube.visible = true;
-      boxGroup.visible = true;
-      cube.position.copy(cubeStartPos);
-      cubeState = "waiting";
-      scoreAnimTime = 0;
-      score = 0;
-      scoreEl.textContent = "0";
-      cubeFallVel = 0;
-    } else {
-      currentMode = MODE_INTERACTIVE;
-      modeBtn.innerHTML = "&#9654; Score Mode";
-      scoreEl.style.display = "none";
-      cube.visible = false;
-      boxGroup.visible = false;
-      // Reset IK solver to current joint state for smooth transition
-      if (window.__ikReady && window.__ikSolver) {
-        try {
-          window.__ikSolver.reset(
-            {
-              origin: { translation: [0, 0, 0], rotation: [1, 0, 0, 0] },
-              joints: {
-                shoulder_pan_joint: shoulderPanJoint.rotation.z,
-                shoulder_lift_joint: shoulderLiftJoint.rotation.z,
-                elbow_joint: elbowJoint.rotation.z,
-                wrist_1_joint: wrist1Joint.rotation.z,
-                wrist_2_joint: wrist2Joint.rotation.z,
-                wrist_3_joint: wrist3Joint.rotation.z,
-              },
+  function enterScoreMode() {
+    currentMode = MODE_SCORE;
+    modeBtn.innerHTML = "&#9881; Interactive";
+    scoreEl.style.display = "flex";
+    cube.visible = true;
+    boxGroup.visible = true;
+    cube.position.copy(cubeStartPos);
+    cubeState = "waiting";
+    scoreAnimTime = 0;
+    scoreStarted = false;
+    score = 0;
+    scoreEl.textContent = "0";
+    cubeFallVel = 0;
+  }
+
+  function enterInteractiveMode() {
+    currentMode = MODE_INTERACTIVE;
+    modeBtn.innerHTML = "&#9654; Score Mode";
+    scoreEl.style.display = "none";
+    cube.visible = false;
+    boxGroup.visible = false;
+    // Reset IK solver to current joint state for smooth transition
+    if (window.__ikReady && window.__ikSolver) {
+      try {
+        window.__ikSolver.reset(
+          {
+            origin: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+            joints: {
+              shoulder_pan_joint: shoulderPanJoint.rotation.z,
+              shoulder_lift_joint: shoulderLiftJoint.rotation.z,
+              elbow_joint: elbowJoint.rotation.z,
+              wrist_1_joint: wrist1Joint.rotation.z,
+              wrist_2_joint: wrist2Joint.rotation.z,
+              wrist_3_joint: wrist3Joint.rotation.z,
             },
-            [50, 20],
-          );
-        } catch (e) {
-          console.warn("[IK] Reset failed:", e);
-        }
+          },
+          { position: 50, smoothness: 20, collision: 10, orientation: 25 },
+        );
+      } catch (e) {
+        console.warn("[IK] Reset failed:", e);
       }
     }
+  }
+
+  modeBtn.addEventListener("click", function () {
+    if (currentMode === MODE_INTERACTIVE) {
+      enterScoreMode();
+    } else {
+      enterInteractiveMode();
+    }
   });
+
+  // Score mode is the default on page load
+  enterScoreMode();
 
   function showPlusOne() {
     var el = document.createElement("div");
@@ -393,26 +405,30 @@
   var cubeState = "waiting";
   var cubeFallVel = 0;
   var lastScoredCycle = -1;
+  // Cycle clock is held at 0 until the gripper reaches the start hover pose,
+  // so the first pick doesn't happen while the arm is still traveling there
+  var scoreStarted = false;
+  var scoreStartPos = new THREE.Vector3(0.2, 0.15, 0.15);
 
   // Keyframes: [shoulderPan, shoulderLift, elbow, wrist1, wrist2, wrist3, gripperAngle]
   var scoreKeyframes = [
-    { t: 0.0, j: [0, -0.8, 1.0, -0.3, 0, 0], g: 0 },
+    { t: 0.0, j: [-2.7071, -1.9369, 2.0829, -1.7207, -1.5688, -1.1363], g: 0 },
     { t: 1.8, j: [0.5, -0.2, 0.5, -0.35, 0, 0.2], g: 0 },
     { t: 2.5, j: [0.5, -0.05, 0.35, -0.3, 0, 0.2], g: 0 },
     { t: 3.0, j: [0.5, -0.05, 0.35, -0.3, 0, 0.2], g: 0.6 },
     { t: 3.8, j: [0.5, -0.4, 0.7, -0.35, 0, 0.2], g: 0.6 },
     { t: 5.2, j: [-0.4, -0.35, 0.65, -0.35, 0, -0.2], g: 0.6 },
     { t: 5.8, j: [-0.4, -0.35, 0.65, -0.35, 0, -0.2], g: 0 },
-    { t: 7.0, j: [0, -0.8, 1.0, -0.3, 0, 0], g: 0 },
-    { t: 8.5, j: [0, -0.8, 1.0, -0.3, 0, 0], g: 0 },
+    { t: 7.0, j: [-2.7071, -1.9369, 2.0829, -1.7207, -1.5688, -1.1363], g: 0 },
+    { t: 8.5, j: [-2.7071, -1.9369, 2.0829, -1.7207, -1.5688, -1.1363], g: 0 },
   ];
   var cycleDuration = 8.5;
 
   // IK waypoints: scene-space positions the end-effector should reach
   // Same cycle timing as FK keyframes, but driven by IK solver
   var scoreIKWaypoints = [
-    { t: 0.0, pos: [0.0, 0.25, 0.0], g: 0 },     // home / rest
-    { t: 1.5, pos: [0.2, 0.15, 0.15], g: 0 },     // above cube
+    { t: 0.0, pos: [0.2, 0.15, 0.15], g: 0 },     // start above cube
+    { t: 1.5, pos: [0.2, 0.15, 0.15], g: 0 },     // hold above cube
     { t: 2.5, pos: [0.2, 0.035, 0.15], g: 0 },    // lower to cube
     { t: 3.0, pos: [0.2, 0.035, 0.15], g: 0.6 },  // grip closed
     { t: 3.5, pos: [0.2, 0.15, 0.15], g: 0.6 },   // lift up
@@ -420,8 +436,8 @@
     { t: 5.5, pos: [-0.15, 0.05, 0.18], g: 0.6 }, // lower to box
     { t: 5.8, pos: [-0.15, 0.05, 0.18], g: 0 },   // release
     { t: 6.5, pos: [-0.15, 0.15, 0.18], g: 0 },   // retract
-    { t: 7.5, pos: [0.0, 0.25, 0.0], g: 0 },      // return home
-    { t: 8.5, pos: [0.0, 0.25, 0.0], g: 0 },      // dwell
+    { t: 7.5, pos: [0.2, 0.15, 0.15], g: 0 },     // return above cube
+    { t: 8.5, pos: [0.2, 0.15, 0.15], g: 0 },     // dwell
   ];
 
   function smoothstep(t) {
@@ -535,8 +551,11 @@
           ikInitializedInLoop = true;
           var state = window.__ikSolver.currentState;
           if (state && state.frames && state.frames.tool0) {
-            var f = state.frames.tool0.translation;
-            smoothedTarget.set(f[0], f[1], f[2]);
+            // lively v1: frames hold TransformInfo ({world, local}); older
+            // builds exposed translation directly
+            var tf = state.frames.tool0;
+            var f = (tf.world && tf.world.translation) || tf.translation;
+            if (f && f.length === 3) smoothedTarget.set(f[0], f[1], f[2]);
           }
         }
 
@@ -560,21 +579,19 @@
         // Smooth the URDF-frame target
         smoothedTarget.lerp(ikSceneTarget, Math.min(1, 5 * dt));
 
-        // Solve IK
+        // Solve IK — gripper kept facing down here too ([x,y,z,w] = [1,0,0,0])
         var result = window.__ikSolver.solve(
-          [
-            {
+          {
+            position: {
               Translation: [
                 smoothedTarget.x,
                 smoothedTarget.y,
                 smoothedTarget.z,
               ],
             },
-            null,
-            null,
-            null,
-          ],
-          [50, 20, 10, 0],
+            orientation: { Rotation: [1, 0, 0, 0] },
+          },
+          { position: 50, smoothness: 20, collision: 10, orientation: 25 },
           t,
           [],
         );
@@ -598,20 +615,32 @@
         setGripper(gripperOverride != null ? gripperOverride : 0);
       } else {
         // --- FK fallback (before WASM loads) ---
+        // Idles around the same hover-above-cube pose the IK starts from
         var reach = (currentMouseY - 0.5) * 2;
         var sway = Math.sin(t * 0.5) * 0.05;
 
-        shoulderPanJoint.rotation.z = Math.sin(t * 0.3) * 0.15;
-        shoulderLiftJoint.rotation.z = -0.8 + reach * 0.8 + sway;
-        elbowJoint.rotation.z = 1.0 - reach * 0.5 + sway * 0.5;
-        wrist1Joint.rotation.z = -0.3 + reach * 0.3;
-        wrist2Joint.rotation.z = Math.sin(t * 0.4) * 0.2;
-        wrist3Joint.rotation.z = Math.sin(t * 0.6) * 0.15;
+        shoulderPanJoint.rotation.z = -2.7071 + Math.sin(t * 0.3) * 0.15;
+        shoulderLiftJoint.rotation.z = -1.9369 + reach * 0.4 + sway;
+        elbowJoint.rotation.z = 2.0829 - reach * 0.25 + sway * 0.5;
+        wrist1Joint.rotation.z = -1.7207 + reach * 0.15;
+        wrist2Joint.rotation.z = -1.5688 + Math.sin(t * 0.4) * 0.1;
+        wrist3Joint.rotation.z = -1.1363 + Math.sin(t * 0.6) * 0.1;
         setGripper(gripperOverride != null ? gripperOverride : 0);
       }
     } else {
       // --- Score mode: animated pick-and-place ---
-      scoreAnimTime += dt;
+      if (!scoreStarted && window.__ikReady) {
+        // IK keeps driving toward the t=0 hover waypoint; start the cycle
+        // clock only once the gripper is actually there
+        scene.updateMatrixWorld(true);
+        gripPoint.getWorldPosition(wpVec);
+        if (wpVec.distanceTo(scoreStartPos) < 0.05) {
+          scoreStarted = true;
+        }
+        scoreAnimTime = 0;
+      } else {
+        scoreAnimTime += dt;
+      }
       var ct = scoreAnimTime % cycleDuration;
 
       if (window.__ikReady && window.__ikSolver) {
@@ -631,21 +660,19 @@
 
         // Solve IK
         // Gripper faces straight down for pick-and-place: tool0 +Z aligned
-        // with URDF -Z, i.e. 180deg about X — quaternion [w,x,y,z] = [0,1,0,0]
+        // with URDF -Z, i.e. 180deg about X — quaternion [x,y,z,w] = [1,0,0,0]
         var result = window.__ikSolver.solve(
-          [
-            {
+          {
+            position: {
               Translation: [
                 scoreIKTarget.x,
                 scoreIKTarget.y,
                 scoreIKTarget.z,
               ],
             },
-            null,
-            null,
-            { Rotation: [0, 1, 0, 0] },
-          ],
-          [50, 20, 10, 25],
+            orientation: { Rotation: [1, 0, 0, 0] },
+          },
+          { position: 50, smoothness: 20, collision: 10, orientation: 25 },
           t,
           [],
         );
