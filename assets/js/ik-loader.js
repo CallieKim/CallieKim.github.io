@@ -33,23 +33,12 @@ import * as bg from "/assets/robot/lively/lively_bg.js";
       { value: 0, delta: 0 },
     ];
 
-    // Ground plane for collision avoidance (thin box at z=0 in URDF frame)
-    // NOTE: v1 quaternions are [x, y, z, w]
-    var shapes = [
-      {
-        type: "Box",
-        name: "ground",
-        frame: "world",
-        physical: true,
-        x: 1.0,
-        y: 1.0,
-        z: 0.01,
-        localTransform: {
-          translation: [0, 0, -0.005],
-          rotation: [0, 0, 0, 1],
-        },
-      },
-    ];
+    // No environment shapes: a ground plane here used to block the gripper
+    // from lowering all the way to the cube (its collision box got pushed up
+    // before the pads reached grasp depth). Waypoints and the interactive
+    // target's 0.15 height floor keep the arm above ground anyway.
+    // Collision avoidance now only handles robot self-collision.
+    var shapes = [];
 
     // Precomputed IK solution for hovering above the cube (scene
     // [0.2, 0.15, 0.15], gripper facing down) — both modes start here

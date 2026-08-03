@@ -215,7 +215,9 @@
   });
 
   // angle: 0 = open, ~0.8 = fully closed (finger_joint angle in radians)
+  var appliedGrip = 0; // last angle actually applied (read by the cube logic)
   function setGripper(angle) {
+    appliedGrip = angle;
     for (var i = 0; i < gripperJoints.length; i++) {
       gripperJoints[i].group.rotation.x = angle * gripperJoints[i].mult;
     }
@@ -230,19 +232,24 @@
 
 
   // ========== SCORE MODE OBJECTS ==========
-  var cubeSize = 0.025;
-  var cubeGeo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+  // Pick object: gold coin standing on its edge (taller than the old cube,
+  // so the gripper can reach it without diving all the way to the floor).
+  // Variable is still called "cube" throughout the state machine.
+  var coinRadius = 0.03;
+  var coinThickness = 0.012;
+  var cubeGeo = new THREE.CylinderGeometry(coinRadius, coinRadius, coinThickness, 32);
   var cubeMat = new THREE.MeshStandardMaterial({
-    color: 0xff8c42,
-    roughness: 0.3,
-    metalness: 0.1,
+    color: 0xffd700,
+    roughness: 0.25,
+    metalness: 0.9,
   });
   var cube = new THREE.Mesh(cubeGeo, cubeMat);
+  cube.rotation.z = HALF_PI; // stand on edge, axis along scene X (90deg yaw from before)
   cube.castShadow = true;
   cube.visible = false;
   scene.add(cube);
 
-  var cubeStartPos = new THREE.Vector3(0.2, cubeSize / 2, 0.15);
+  var cubeStartPos = new THREE.Vector3(0.2, coinRadius, 0.15);
 
   // Open-top box
   var boxGroup = new THREE.Group();
@@ -409,6 +416,8 @@
   // so the first pick doesn't happen while the arm is still traveling there
   var scoreStarted = false;
   var scoreStartPos = new THREE.Vector3(0.2, 0.15, 0.15);
+  // Where the coin gets dropped; release is gated on the gripper being here
+  var scoreDropPos = new THREE.Vector3(-0.15, 0.05, 0.18);
 
   // Keyframes: [shoulderPan, shoulderLift, elbow, wrist1, wrist2, wrist3, gripperAngle]
   var scoreKeyframes = [
@@ -426,18 +435,21 @@
 
   // IK waypoints: scene-space positions the end-effector should reach
   // Same cycle timing as FK keyframes, but driven by IK solver
+  // The IK arm trails these targets by a few hundred ms (smoothness), so
+  // grip/release moments come after a dwell that lets the arm settle first
   var scoreIKWaypoints = [
-    { t: 0.0, pos: [0.2, 0.15, 0.15], g: 0 },     // start above cube
-    { t: 1.5, pos: [0.2, 0.15, 0.15], g: 0 },     // hold above cube
-    { t: 2.5, pos: [0.2, 0.035, 0.15], g: 0 },    // lower to cube
-    { t: 3.0, pos: [0.2, 0.035, 0.15], g: 0.6 },  // grip closed
-    { t: 3.5, pos: [0.2, 0.15, 0.15], g: 0.6 },   // lift up
-    { t: 5.0, pos: [-0.15, 0.15, 0.18], g: 0.6 }, // above box
-    { t: 5.5, pos: [-0.15, 0.05, 0.18], g: 0.6 }, // lower to box
-    { t: 5.8, pos: [-0.15, 0.05, 0.18], g: 0 },   // release
-    { t: 6.5, pos: [-0.15, 0.15, 0.18], g: 0 },   // retract
-    { t: 7.5, pos: [0.2, 0.15, 0.15], g: 0 },     // return above cube
-    { t: 8.5, pos: [0.2, 0.15, 0.15], g: 0 },     // dwell
+    { t: 0.0, pos: [0.2, 0.15, 0.15], g: 0 },      // start above coin
+    { t: 1.5, pos: [0.2, 0.15, 0.15], g: 0 },      // hold above coin
+    { t: 2.5, pos: [0.2, 0.045, 0.15], g: 0 },     // lower to coin
+    { t: 3.2, pos: [0.2, 0.045, 0.15], g: 0 },     // dwell — arm settles
+    { t: 3.6, pos: [0.2, 0.045, 0.15], g: 0.72 },  // grip closes on coin
+    { t: 4.2, pos: [0.2, 0.15, 0.15], g: 0.72 },   // lift up
+    { t: 5.6, pos: [-0.15, 0.15, 0.18], g: 0.72 }, // above box
+    { t: 6.2, pos: [-0.15, 0.05, 0.18], g: 0.72 }, // lower to box
+    { t: 6.6, pos: [-0.15, 0.05, 0.18], g: 0.72 }, // dwell — arm settles
+    { t: 7.0, pos: [-0.15, 0.05, 0.18], g: 0 },    // release
+    { t: 7.6, pos: [-0.15, 0.15, 0.18], g: 0 },    // retract
+    { t: 8.5, pos: [0.2, 0.15, 0.15], g: 0 },      // return above coin
   ];
 
   function smoothstep(t) {
@@ -687,7 +699,26 @@
           wrist2Joint.rotation.z = j.wrist_2_joint != null ? j.wrist_2_joint : 0;
           wrist3Joint.rotation.z = j.wrist_3_joint != null ? j.wrist_3_joint : 0;
         }
-        setGripper(gripperOverride != null ? gripperOverride : ikState.grip);
+        // Release gate: while carrying, keep the grip closed until the
+        // gripper is actually above the drop location — the IK arm can trail
+        // the keyframe timeline, so time alone isn't trustworthy
+        var gripVal = ikState.grip;
+        if (cubeState === "gripped") {
+          scene.updateMatrixWorld(true);
+          gripPoint.getWorldPosition(wpVec);
+          // "Above the box" = horizontally aligned with it and reasonably low;
+          // full 3D distance is too strict (solver keeps a few cm of offset)
+          var ddx = wpVec.x - scoreDropPos.x;
+          var ddz = wpVec.z - scoreDropPos.z;
+          var aboveBox =
+            Math.sqrt(ddx * ddx + ddz * ddz) < 0.09 && wpVec.y < 0.22;
+          if (!aboveBox) {
+            // Any keyframe attempt to open before arrival is clamped shut —
+            // otherwise the fingers visibly stutter as g interpolates down
+            gripVal = Math.max(gripVal, 0.72);
+          }
+        }
+        setGripper(gripperOverride != null ? gripperOverride : gripVal);
       } else {
         // FK fallback (before WASM loads)
         var fkState = getAnimState(scoreAnimTime);
@@ -707,31 +738,29 @@
       // Cube state machine
       var currentCycle = Math.floor(scoreAnimTime / cycleDuration);
 
-      if (ct < 3.0) {
-        // Cube on ground, waiting
-        cubeState = "waiting";
-        cube.position.copy(cubeStartPos);
-        cube.visible = true;
-        cubeFallVel = 0;
-      } else if (ct >= 3.0 && ct < 5.8) {
-        // Cube gripped — follow end effector
-        cubeState = "gripped";
+      // State-driven part: grip, carry, release, fall, score — driven by what
+      // the gripper actually does, not by the clock (the arm and the release
+      // gate can lag the keyframe timeline by an arbitrary amount)
+      if (cubeState === "waiting" && ct >= 3.6 && ct < 7.0) {
+        // Attach only if the pads actually reached the coin (no teleports)
         gripPoint.getWorldPosition(wpVec);
-        cube.position.copy(wpVec);
-        cube.visible = true;
-      } else if (ct >= 5.8 && ct < 6.5) {
-        // Cube falling
-        if (cubeState !== "falling") {
+        if (appliedGrip > 0.5 && wpVec.distanceTo(cube.position) < 0.08) {
+          cubeState = "gripped";
+        }
+      } else if (cubeState === "gripped") {
+        gripPoint.getWorldPosition(wpVec);
+        if (appliedGrip < 0.35) {
+          // Gripper actually opened (only happens above the box) — drop
           cubeState = "falling";
-          gripPoint.getWorldPosition(wpVec);
-          cube.position.copy(wpVec);
           cubeFallVel = 0;
         }
+        cube.position.copy(wpVec);
+      } else if (cubeState === "falling") {
         cubeFallVel += 1.2 * dt;
         cube.position.y -= cubeFallVel;
 
         // Stop at box floor
-        var boxFloor = boxPos.y + boxWall + cubeSize / 2;
+        var boxFloor = boxPos.y + boxWall + coinRadius;
         if (cube.position.y <= boxFloor) {
           cube.position.y = boxFloor;
           cube.position.x = boxPos.x;
@@ -745,12 +774,15 @@
           }
           cubeState = "inbox";
         }
-      } else if (ct >= 6.5 && ct < 8.0) {
-        // Cube resting in box (hidden to reset)
+      }
+
+      // Time-driven part: only hide-in-box and cycle reset
+      if (cubeState === "inbox" && ct >= 7.6) {
         cube.visible = false;
         cubeState = "hidden";
-      } else {
-        // Brief pause before next cycle — show cube at start
+      }
+      if (ct < 3.6 && cubeState !== "waiting") {
+        // New cycle — coin back at start
         cubeState = "waiting";
         cube.position.copy(cubeStartPos);
         cube.visible = true;
