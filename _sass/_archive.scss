@@ -55,15 +55,39 @@
     margin-top: 1em;
     border-bottom: none;
   }
+
+  /* out-specify `.page__content p` so list items keep the archive scale */
+  p.archive__item-excerpt {
+    font-size: $type-size-5b;
+  }
+
+  p.archive__item-meta,
+  p.archive__item-citation {
+    font-size: $type-size-6;
+  }
 }
 
 .archive__item-excerpt {
   margin-top: 0;
-  font-size: $type-size-6;
+  font-size: $type-size-5b;
 
   & + p {
     text-indent: 0;
   }
+}
+
+/* Venue / date line under an archive item title */
+.archive__item-meta {
+  margin: 0 0 0.35em;
+  color: mix(#fff, $gray, 25%);
+  font-size: $type-size-6;
+}
+
+/* Recommended citation / download line */
+.archive__item-citation {
+  margin-top: 0.35em;
+  color: mix(#fff, $gray, 25%);
+  font-size: $type-size-6;
 }
 
 .archive__item-teaser {
@@ -164,7 +188,7 @@
 
 .feature__item {
   margin-bottom: 2em;
-  font-size: 1.25rem;
+  font-size: $type-size-4;
 
   @include breakpoint($small) {
     margin-bottom: 0;
@@ -178,7 +202,7 @@
 
   &--left {
     @include full();
-    font-size: 1.25rem;
+    font-size: $type-size-4;
 
     .archive__item-teaser {
       margin-bottom: 2em;
@@ -199,7 +223,7 @@
 
   &--right {
     @include full();
-    font-size: 1.25rem;
+    font-size: $type-size-4;
 
     .archive__item-teaser {
       margin-bottom: 2em;
@@ -222,7 +246,7 @@
 
   &--center {
     @include full();
-    font-size: 1.25rem;
+    font-size: $type-size-4;
 
     .archive__item-teaser {
       margin-bottom: 2em;

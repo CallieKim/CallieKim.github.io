@@ -137,9 +137,9 @@
   var wrist3Visual = makeFrame([0, 0, -0.081], [HALF_PI, 0, 0]);
   wrist3Joint.add(wrist3Visual);
 
-  // Grip point at end of wrist3 (for score mode cube tracking)
+  // Grip point between gripper pads (for score mode cube tracking)
   var gripPoint = new THREE.Group();
-  gripPoint.position.set(0, 0.09, 0);
+  gripPoint.position.set(0, 0, 0.13);
   wrist3Joint.add(gripPoint);
 
   // ========== LOAD MESHES ==========
@@ -158,6 +158,75 @@
   ].forEach(function (entry) {
     loadMesh(loader, urPath + entry[0], entry[1]);
   });
+
+  // ========== ROBOTIQ 2F-85 GRIPPER ==========
+  // Mounted on the wrist_3 flange (ur3.xml attaches the gripper to 'flange').
+  // Joint origins from the robotiq_arg2f_85 URDF.
+  // GLB meshes are in millimeters, rotated -90deg about X relative to the URDF
+  // link frames (outer_knuckle has that rotation baked into its glTF node).
+  var gripperPath = "/assets/robot/robotiq/visual/";
+  var gripperJoints = []; // { group, mult } — all revolute about local X
+
+  // tool0 frame coincides with wrist_3 (flange/tool0 rotations in ur3.xml net
+  // to identity): tool axis = wrist_3 +Z, so mount the gripper unrotated
+  var gripperMount = makeFrame(null, null);
+  wrist3Joint.add(gripperMount);
+
+  function addGripperMesh(file, parent, rotX) {
+    var wrap = new THREE.Group();
+    wrap.scale.setScalar(0.001);
+    wrap.rotation.x = rotX;
+    parent.add(wrap);
+    loadMesh(loader, gripperPath + file, wrap);
+  }
+
+  addGripperMesh("robotiq_arg2f_85_base_link.glb", gripperMount, HALF_PI);
+
+  [1, -1].forEach(function (side) {
+    // side 1 = left finger (frame flipped PI about Z), -1 = right finger
+    var flip = side === 1 ? PI : 0;
+
+    var knuckleFrame = makeFrame([0, side * -0.0306011, 0.054904], [0, 0, flip]);
+    gripperMount.add(knuckleFrame);
+    var knuckleJoint = new THREE.Group();
+    knuckleFrame.add(knuckleJoint);
+    gripperJoints.push({ group: knuckleJoint, mult: 1 });
+    addGripperMesh("robotiq_arg2f_85_outer_knuckle.glb", knuckleJoint, 0);
+
+    var outerFingerFrame = makeFrame([0, 0.0315, -0.0041], null);
+    knuckleJoint.add(outerFingerFrame);
+    addGripperMesh("robotiq_arg2f_85_outer_finger.glb", outerFingerFrame, HALF_PI);
+
+    var innerFingerFrame = makeFrame([0, 0.0061, 0.0471], null);
+    outerFingerFrame.add(innerFingerFrame);
+    var innerFingerJoint = new THREE.Group();
+    innerFingerFrame.add(innerFingerJoint);
+    gripperJoints.push({ group: innerFingerJoint, mult: -1 });
+    addGripperMesh("robotiq_arg2f_85_inner_finger.glb", innerFingerJoint, HALF_PI);
+    // Pad mesh is modeled in the inner-finger frame (offset baked in)
+    addGripperMesh("robotiq_arg2f_85_pad.glb", innerFingerJoint, HALF_PI);
+
+    var innerKnuckleFrame = makeFrame([0, side * -0.0127, 0.06142], [0, 0, flip]);
+    gripperMount.add(innerKnuckleFrame);
+    var innerKnuckleJoint = new THREE.Group();
+    innerKnuckleFrame.add(innerKnuckleJoint);
+    gripperJoints.push({ group: innerKnuckleJoint, mult: 1 });
+    addGripperMesh("robotiq_arg2f_85_inner_knuckle.glb", innerKnuckleJoint, HALF_PI);
+  });
+
+  // angle: 0 = open, ~0.8 = fully closed (finger_joint angle in radians)
+  function setGripper(angle) {
+    for (var i = 0; i < gripperJoints.length; i++) {
+      gripperJoints[i].group.rotation.x = angle * gripperJoints[i].mult;
+    }
+  }
+
+  // Console test hook: __gripper(0.6) closes, __gripper(0) opens,
+  // __gripper(null) returns control to the animation
+  var gripperOverride = null;
+  window.__gripper = function (angle) {
+    gripperOverride = typeof angle === "number" ? angle : null;
+  };
 
 
   // ========== SCORE MODE OBJECTS ==========
@@ -503,8 +572,9 @@
             },
             null,
             null,
+            null,
           ],
-          [50, 20, 10],
+          [50, 20, 10, 0],
           t,
           [],
         );
@@ -525,6 +595,7 @@
           wrist2Joint.rotation.z = w2 != null ? w2 : 0;
           wrist3Joint.rotation.z = w3 != null ? w3 : 0;
         }
+        setGripper(gripperOverride != null ? gripperOverride : 0);
       } else {
         // --- FK fallback (before WASM loads) ---
         var reach = (currentMouseY - 0.5) * 2;
@@ -536,6 +607,7 @@
         wrist1Joint.rotation.z = -0.3 + reach * 0.3;
         wrist2Joint.rotation.z = Math.sin(t * 0.4) * 0.2;
         wrist3Joint.rotation.z = Math.sin(t * 0.6) * 0.15;
+        setGripper(gripperOverride != null ? gripperOverride : 0);
       }
     } else {
       // --- Score mode: animated pick-and-place ---
@@ -558,6 +630,8 @@
         scoreIKTarget.applyMatrix4(invRobotMatrix);
 
         // Solve IK
+        // Gripper faces straight down for pick-and-place: tool0 +Z aligned
+        // with URDF -Z, i.e. 180deg about X — quaternion [w,x,y,z] = [0,1,0,0]
         var result = window.__ikSolver.solve(
           [
             {
@@ -569,8 +643,9 @@
             },
             null,
             null,
+            { Rotation: [0, 1, 0, 0] },
           ],
-          [50, 20, 10],
+          [50, 20, 10, 25],
           t,
           [],
         );
@@ -585,6 +660,7 @@
           wrist2Joint.rotation.z = j.wrist_2_joint != null ? j.wrist_2_joint : 0;
           wrist3Joint.rotation.z = j.wrist_3_joint != null ? j.wrist_3_joint : 0;
         }
+        setGripper(gripperOverride != null ? gripperOverride : ikState.grip);
       } else {
         // FK fallback (before WASM loads)
         var fkState = getAnimState(scoreAnimTime);
@@ -595,6 +671,7 @@
         wrist1Joint.rotation.z = fkState.joints[3];
         wrist2Joint.rotation.z = fkState.joints[4];
         wrist3Joint.rotation.z = fkState.joints[5];
+        setGripper(gripperOverride != null ? gripperOverride : fkState.grip);
       }
 
       // Update world matrices for grip point tracking

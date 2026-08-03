@@ -11,6 +11,9 @@ import init, { Solver } from "/assets/robot/lively/lively_tk_lib.js";
       { type: "PositionMatch", name: "EE Pos", link: "tool0", weight: 50 },
       { type: "SmoothnessMacro", name: "Smooth", weight: 20 },
       { type: "CollisionAvoidance", name: "Collision", weight: 10 },
+      // Orientation goal for tool0 — weight 0 in interactive mode (free),
+      // raised in score mode to keep the gripper facing down
+      { type: "OrientationMatch", name: "EE Rot", link: "tool0", weight: 0 },
     ];
 
     var rootBounds = [
@@ -69,8 +72,8 @@ import init, { Solver } from "/assets/robot/lively/lively_tk_lib.js";
     console.log("[IK] Links:", solver.links);
 
     var testResult = solver.solve(
-      [{ Translation: [0.2, 0, 0.3] }, null, null],
-      [50, 20, 10],
+      [{ Translation: [0.2, 0, 0.3] }, null, null, null],
+      [50, 20, 10, 0],
       0,
       [],
     );

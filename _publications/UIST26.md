@@ -5,6 +5,7 @@ permalink: /publication/UIST26
 excerpt: "<img width='600px' src='/images/SHRIMP-teaser.png'>"
 date: 2026-11-02
 venue: "In The 39th Annual ACM Symposium on User Interface Software and Technology (UIST '26)"
+description: "SHRIMP lets users generate hierarchical robot task plans from natural language and iteratively refine them through re-prompting and explicit correction. Users can validate plans in simulation before executing them on a physical robot. A user study with 35 participants showed improved perceived control and robot transparency."
 paperurl:
 citation: "Mya Schroder, Yuna Hwang, Callie Kim, Leqian Cheng, Jeffrey Li-cheng Liu, Chenchen Zheng, Xinning He, and Bilge Mutlu. 2026. SHRIMP: Iterative Refinement of Robot Task Plans. In The 39th Annual ACM Symposium on User Interface Software and Technology (UIST ’26), November 02–05, 2026, Detroit, MI, USA. ACM, New York, NY, USA, 18 pages. https://doi.org/10.1145/3830398.3830644"
 ---

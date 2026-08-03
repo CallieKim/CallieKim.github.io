@@ -5,6 +5,7 @@ permalink: /publication/DIS26
 excerpt: "<img width='600px' src='/images/figure-teaser-roboblock-dis26.png'>"
 date: 2026-06-13
 venue: "In Designing Interactive Systems Conference (DIS '26)"
+description: "Robo-Blocks is a block-based programming environment that leverages LLMs to give novice robot programmers generative scaffolding, connecting high-level ideas to executable robot behaviors through structured narratives. Through a Research through Design process and deployment with novices, we uncovered user personas and usage patterns for generative scaffolding. We present design insights for integrating generative scaffolding into social-robot programming."
 paperurl:
 citation: "Arissa J. Sato*, Callie Y. Kim*, Nathan Thomas White, Abhinav Maneesh, Yuqing Wang, Hui-Ru Ho, and Bilge Mutlu. 2026. Robo-Blocks: Generative Scaffolding in End-User Design and Programming of Social Robots. In Designing Interactive Systems Conference (DIS ’26), June 13–17, 2026, Singapore, Singapore. ACM, New York, NY, USA, 17 pages. https://doi.org/10.1145/3800645.3812997"
 ---

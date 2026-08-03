@@ -5,6 +5,7 @@ permalink: /publication/CHI26-money
 excerpt: "<img width='600px' src='/images/money-teaser.png'>"
 date: 2026-04-13
 venue: "Proceedings of the 2026 CHI Conference on Human Factors in Computing Systems (CHI 26)"
+description: "To understand how adults with Down syndrome manage money and what support they prefer, we designed three cash-based budgeting technology probes: a gamified tablet app, an augmented reality app, and a custom tangible device. Seven adults with Down syndrome used all three probes, revealing modality tradeoffs in engagement, verification, and error recovery. We offer design implications for budgeting technologies that support autonomy without collapsing interdependence."
 paperurl:
 citation: "Hailey L. Johnson, Heidi Spalitta, Callie Y. Kim, and Bilge Mutlu. 2026. Supporting Money Management among Adults with Down Syndrome: A Multi-Technology Probe Study. In Proceedings of the 2026 CHI Conference on Human Factors in Computing Systems (CHI '26). Association for Computing Machinery, New York, NY, USA, Article 287, 1–20. https://doi.org/10.1145/3772318.3791299"
 ---

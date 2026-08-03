@@ -7,6 +7,9 @@ local/
 # Ignore the Gemfile that is generated
 Gemfile.lock
 
+# Ignore machine-specific bundler config
+.bundle/
+
 # Ingore files created by npm
 node_modules
 package-lock.json

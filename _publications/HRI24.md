@@ -5,6 +5,7 @@ permalink: /publication/HRI24
 excerpt: "<img width='600px' src='/images/new_teaser.png'>"
 date: 2024-03-11
 venue: "Proceedings of the 2024 ACM/IEEE International Conference on Human-Robot Interaction (HRI 24)"
+description: "We compared an LLM-powered social robot against text- and voice-based agents in a user study with 32 participants across conversational tasks including choosing, generating, executing, and negotiating. LLM-powered robots elevated expectations for sophisticated non-verbal cues and excelled in connection-building and deliberation, but fell short in logical communication. We provide design implications for robots integrating LLMs and for fine-tuning LLMs for use with robots."
 paperurl:
 citation: "Callie Y. Kim*, Christine P. Lee*, and Bilge Mutlu. 2024. Understanding Large-Language Model (LLM)-powered Human-Robot Interaction. In Proceedings of the 2024 ACM/IEEE International Conference on Human-Robot Interaction (HRI '24). Association for Computing Machinery, New York, NY, USA, 371–380."
 ---

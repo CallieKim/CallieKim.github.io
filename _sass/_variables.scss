@@ -30,17 +30,18 @@ $garamond                   : Garamond, serif;
 
 $global-font-family         : $sans-serif;
 $header-font-family         : $sans-serif;
-$caption-font-family        : $serif;
+$caption-font-family        : $sans-serif;
 
-/* type scale */
-$type-size-1                : 2.441em;  // ~39.056px
-$type-size-2                : 1.953em;  // ~31.248px
-$type-size-3                : 1.563em;  // ~25.008px
-$type-size-4                : 1.25em;   // ~20px
-$type-size-5                : 1em;      // ~16px
-$type-size-6                : 0.75em;   // ~12px
-$type-size-7                : 0.6875em; // ~11px
-$type-size-8                : 0.625em;  // ~10px
+/* type scale — px values are at the 18px desktop root (16px on mobile) */
+$type-size-1                : 2.441em;  // ~44px  hero
+$type-size-2                : 1.953em;  // ~35px  page title
+$type-size-3                : 1.563em;  // ~28px  h1
+$type-size-4                : 1.25em;   // ~22px  h2
+$type-size-5                : 1em;      // ~18px  h3 / body copy
+$type-size-5b               : 0.889em;  // ~16px  secondary body (excerpts, h4)
+$type-size-6                : 0.833em;  // ~15px  meta, captions, UI chrome
+$type-size-7                : 0.75em;   // ~13px  fine print, pills, badges
+$type-size-8                : 0.625em;  // ~11px  smallest
 
 /* masthead properties */
 $masthead-height            : 70px;

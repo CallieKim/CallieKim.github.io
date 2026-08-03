@@ -5,6 +5,7 @@ permalink: /publication/HRI26
 excerpt: "<img width='600px' src='/images/robocritics-teaser.png'>"
 date: 2026-03-16
 venue: "Proceedings of the 21st ACM/IEEE International Conference on Human-Robot Interaction (HRI '26)"
+description: "RoboCritics augments LLM-based robot programming with expert-informed motion-level critics that analyze execution traces for issues such as collisions and joint speed violations. The critics surface transparent feedback and one-click fixes that keep users in the loop. In a user study with a UR3e robot, RoboCritics reduced safety violations and improved execution quality compared to a baseline LLM interface."
 paperurl:
 citation: "Callie Y. Kim, Nathan Thomas White, Evan He, Frederic Sala, and Bilge Mutlu. 2026. RoboCritics: Enabling Reliable End-to-End LLM Robot Programming through Expert-Informed Critics. In Proceedings of the 21st ACM/IEEE International Conference on Human-Robot Interaction (HRI '26). Association for Computing Machinery, New York, NY, USA, 914–923. https://doi.org/10.1145/3757279.3785550"
 ---
