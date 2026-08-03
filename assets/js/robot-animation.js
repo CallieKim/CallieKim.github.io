@@ -319,10 +319,35 @@
   scoreEl.style.display = "none";
   container.appendChild(scoreEl);
 
+  // Gripper open/close buttons (interactive mode only)
+  var openBtn = document.createElement("button");
+  openBtn.className = "robot-mode-btn";
+  openBtn.style.top = "48px";
+  openBtn.innerHTML = "&#10005; Open Gripper";
+  openBtn.style.display = "none";
+  container.appendChild(openBtn);
+
+  var closeBtn = document.createElement("button");
+  closeBtn.className = "robot-mode-btn";
+  closeBtn.style.top = "84px";
+  closeBtn.innerHTML = "&#8722; Close Gripper";
+  closeBtn.style.display = "none";
+  container.appendChild(closeBtn);
+
+  openBtn.addEventListener("click", function () {
+    interactiveGripTarget = 0;
+  });
+  closeBtn.addEventListener("click", function () {
+    interactiveGripTarget = 0.72;
+  });
+
   function enterScoreMode() {
     currentMode = MODE_SCORE;
     modeBtn.innerHTML = "&#9881; Interactive";
     scoreEl.style.display = "flex";
+    openBtn.style.display = "none";
+    closeBtn.style.display = "none";
+    if (gizmo) gizmo.visible = false;
     cube.visible = true;
     boxGroup.visible = true;
     cube.position.copy(cubeStartPos);
@@ -338,8 +363,19 @@
     currentMode = MODE_INTERACTIVE;
     modeBtn.innerHTML = "&#9654; Score Mode";
     scoreEl.style.display = "none";
+    openBtn.style.display = "";
+    closeBtn.style.display = "";
     cube.visible = false;
     boxGroup.visible = false;
+    // Put the drag target where the gripper currently is (no jump), then show it
+    if (gizmo) {
+      scene.updateMatrixWorld(true);
+      gripPoint.getWorldPosition(ikTargetScene);
+      ikTargetScene.y = Math.max(0.03, ikTargetScene.y);
+      gizmo.visible = true;
+    }
+    interactiveGripTarget = 0;
+    interactiveGripCurrent = appliedGrip;
     // Reset IK solver to current joint state for smooth transition
     if (window.__ikReady && window.__ikSolver) {
       try {
@@ -385,11 +421,7 @@
   }
 
   // ========== INTERACTIVE MODE STATE ==========
-  var targetMouseY = 0.5;
-  var currentMouseY = 0.5;
-  var targetMouseX = 0.5;
-  var currentMouseX = 0.5;
-  var smoothing = 3.0;
+  var currentMouseY = 0.5; // only used by the FK fallback idle
 
   // IK state — solver is created by ik-loader.js (ES module) and exposed as globals
   var smoothedTarget = new THREE.Vector3();
@@ -398,13 +430,181 @@
   var invRobotMatrixCached = false;
   var ikInitializedInLoop = false;
 
-  document.addEventListener("mousemove", function (e) {
-    targetMouseY = e.clientY / window.innerHeight;
+  // Draggable axis-handle target the gripper follows in interactive mode
+  var ikTargetScene = new THREE.Vector3(0.2, 0.15, 0.15);
+  var interactiveGripTarget = 0; // 0 = open, 0.72 = closed
+  var interactiveGripCurrent = 0;
+
+  // ---- Axis gizmo (RViz-style interactive marker) ----
+  var gizmo = new THREE.Group();
+  gizmo.visible = false;
+  scene.add(gizmo);
+
+  function makeAxisArrow(dir, color) {
+    var group = new THREE.Group();
+    var mat = new THREE.MeshBasicMaterial({
+      color: color,
+      depthTest: false,
+      transparent: true,
+      opacity: 0.9,
+    });
+    var shaft = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.005, 0.005, 0.09, 12),
+      mat,
+    );
+    shaft.position.y = 0.065;
+    shaft.renderOrder = 999;
+    group.add(shaft);
+    var head = new THREE.Mesh(new THREE.ConeGeometry(0.013, 0.028, 12), mat);
+    head.position.y = 0.124;
+    head.renderOrder = 999;
+    group.add(head);
+    // Invisible fat cylinder to make grabbing easier
+    var hit = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02, 0.02, 0.14, 8),
+      new THREE.MeshBasicMaterial({ visible: false }),
+    );
+    hit.position.y = 0.07;
+    group.add(hit);
+    group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+    group.userData.axis = dir.clone();
+    group.userData.mat = mat;
+    group.userData.baseColor = new THREE.Color(color);
+    group.userData.targetScale = 1;
+    return group;
+  }
+
+  var gizmoArrows = [
+    makeAxisArrow(new THREE.Vector3(1, 0, 0), 0xff4444),
+    makeAxisArrow(new THREE.Vector3(0, 1, 0), 0x44dd66),
+    makeAxisArrow(new THREE.Vector3(0, 0, 1), 0x4488ff),
+  ];
+  gizmoArrows.forEach(function (a) {
+    gizmo.add(a);
   });
 
-  container.addEventListener("mousemove", function (e) {
+  // Visual feedback: arrows brighten and grow on hover, more when dragged
+  var WHITE = new THREE.Color(0xffffff);
+  function setArrowState(arrow, state) {
+    var u = arrow.userData;
+    if (state === "drag") {
+      u.mat.color.copy(u.baseColor).lerp(WHITE, 0.5);
+      u.mat.opacity = 1;
+      u.targetScale = 1.3;
+    } else if (state === "hover") {
+      u.mat.color.copy(u.baseColor).lerp(WHITE, 0.25);
+      u.mat.opacity = 1;
+      u.targetScale = 1.15;
+    } else {
+      u.mat.color.copy(u.baseColor);
+      u.mat.opacity = 0.9;
+      u.targetScale = 1;
+    }
+  }
+  var hoveredArrow = null;
+  var draggedArrow = null;
+  var gizmoCenter = new THREE.Mesh(
+    new THREE.SphereGeometry(0.012, 16, 12),
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      depthTest: false,
+      transparent: true,
+      opacity: 0.85,
+    }),
+  );
+  gizmoCenter.renderOrder = 999;
+  gizmo.add(gizmoCenter);
+
+  // ---- Gizmo dragging ----
+  var raycaster = new THREE.Raycaster();
+  var pointerNDC = new THREE.Vector2();
+  var dragAxis = null; // world-space axis direction while dragging
+  var dragOrigin = new THREE.Vector3(); // target position at grab time
+  var dragS0 = 0; // axis parameter at grab time
+
+  function setPointerNDC(e) {
     var rect = container.getBoundingClientRect();
-    targetMouseX = (e.clientX - rect.left) / rect.width;
+    pointerNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    pointerNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  }
+
+  // Parameter along the axis line (dragOrigin + s*dragAxis) closest to the
+  // current pointer ray
+  function axisParamFromPointer() {
+    raycaster.setFromCamera(pointerNDC, camera);
+    var d = dragAxis;
+    var r = raycaster.ray.direction;
+    var w = new THREE.Vector3().subVectors(dragOrigin, raycaster.ray.origin);
+    var b = d.dot(r);
+    var d_ = d.dot(w);
+    var e_ = r.dot(w);
+    var denom = 1 - b * b; // a = c = 1 (unit vectors)
+    if (Math.abs(denom) < 1e-6) return dragS0; // axis parallel to view ray
+    return (b * e_ - d_) / denom;
+  }
+
+  function arrowFromHit(e) {
+    setPointerNDC(e);
+    raycaster.setFromCamera(pointerNDC, camera);
+    var hits = raycaster.intersectObjects(gizmo.children, true);
+    if (!hits.length) return null;
+    var obj = hits[0].object;
+    while (obj && !(obj.userData && obj.userData.axis)) obj = obj.parent;
+    return obj || null;
+  }
+
+  container.addEventListener("pointerdown", function (e) {
+    if (currentMode !== MODE_INTERACTIVE || !gizmo.visible) return;
+    var arrow = arrowFromHit(e);
+    if (!arrow) return;
+    if (hoveredArrow && hoveredArrow !== arrow) setArrowState(hoveredArrow, "none");
+    hoveredArrow = null;
+    draggedArrow = arrow;
+    setArrowState(arrow, "drag");
+    container.style.cursor = "grabbing";
+    dragAxis = arrow.userData.axis.clone(); // gizmo is unrotated: local = world
+    dragOrigin.copy(ikTargetScene);
+    dragS0 = axisParamFromPointer();
+    e.preventDefault();
+  });
+
+  container.addEventListener("pointermove", function (e) {
+    // Hover highlight (only when not dragging)
+    if (dragAxis || currentMode !== MODE_INTERACTIVE || !gizmo.visible) return;
+    var arrow = arrowFromHit(e);
+    if (arrow !== hoveredArrow) {
+      if (hoveredArrow) setArrowState(hoveredArrow, "none");
+      if (arrow) setArrowState(arrow, "hover");
+      hoveredArrow = arrow;
+    }
+    container.style.cursor = arrow ? "grab" : "";
+  });
+
+  window.addEventListener("pointermove", function (e) {
+    if (!dragAxis) return;
+    setPointerNDC(e);
+    var s = axisParamFromPointer();
+    ikTargetScene
+      .copy(dragOrigin)
+      .addScaledVector(dragAxis, s - dragS0);
+    // Keep the target in a sane, mostly-reachable region
+    ikTargetScene.x = Math.max(-0.32, Math.min(0.32, ikTargetScene.x));
+    ikTargetScene.y = Math.max(0.03, Math.min(0.5, ikTargetScene.y));
+    ikTargetScene.z = Math.max(-0.32, Math.min(0.32, ikTargetScene.z));
+    e.preventDefault();
+  });
+
+  window.addEventListener("pointerup", function () {
+    if (draggedArrow) {
+      setArrowState(draggedArrow, "none");
+      draggedArrow = null;
+      container.style.cursor = "";
+    }
+    dragAxis = null;
+  });
+
+  document.addEventListener("mousemove", function (e) {
+    currentMouseY = e.clientY / window.innerHeight; // FK fallback idle only
   });
 
   // ========== SCORE MODE ANIMATION ==========
@@ -551,11 +751,17 @@
     camLook.lerp(targetCamLook, lerpFactor);
 
     if (currentMode === MODE_INTERACTIVE) {
-      // Smooth mouse
-      currentMouseY +=
-        (targetMouseY - currentMouseY) * Math.min(1, smoothing * dt);
-      currentMouseX +=
-        (targetMouseX - currentMouseX) * Math.min(1, smoothing * dt);
+      // Keep the gizmo on the drag target
+      gizmo.position.copy(ikTargetScene);
+
+      // Ease arrow scales toward their hover/drag targets
+      for (var ai = 0; ai < gizmoArrows.length; ai++) {
+        var au = gizmoArrows[ai];
+        var sNow = au.scale.x;
+        var sTgt = au.userData.targetScale;
+        var sNew = sNow + (sTgt - sNow) * Math.min(1, 12 * dt);
+        au.scale.setScalar(sNew);
+      }
 
       if (window.__ikReady && window.__ikSolver) {
         // On first IK frame, seed the smoothed target
@@ -571,14 +777,8 @@
           }
         }
 
-        // --- Interactive: IK cursor-following ---
-        // Compute target in scene space — mouse controls height & lateral sweep
-        // Camera views from +X/+Z quadrant; screen-up ~ scene Y, screen-right ~ scene -Z
-        ikSceneTarget.set(
-          -0.08,
-          0.15 + (1.0 - currentMouseY) * 0.4,
-          -0.05 + (currentMouseX - 0.5) * 0.3,
-        );
+        // --- Interactive: gripper follows the drag handle ---
+        ikSceneTarget.copy(ikTargetScene);
 
         // Convert to URDF base frame (robotRoot never moves, so cache inverse)
         if (!invRobotMatrixCached) {
@@ -624,7 +824,13 @@
           wrist2Joint.rotation.z = w2 != null ? w2 : 0;
           wrist3Joint.rotation.z = w3 != null ? w3 : 0;
         }
-        setGripper(gripperOverride != null ? gripperOverride : 0);
+        // Smoothly approach the requested grip (open/close buttons)
+        interactiveGripCurrent +=
+          (interactiveGripTarget - interactiveGripCurrent) *
+          Math.min(1, 6 * dt);
+        setGripper(
+          gripperOverride != null ? gripperOverride : interactiveGripCurrent,
+        );
       } else {
         // --- FK fallback (before WASM loads) ---
         // Idles around the same hover-above-cube pose the IK starts from
