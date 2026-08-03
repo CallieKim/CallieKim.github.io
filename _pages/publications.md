@@ -11,6 +11,11 @@ author_profile: true
 
 {% include base_path %}
 
-{% for post in site.publications reversed %}
-  {% include archive-single.html %}
+{% assign sorted_publications = site.publications | sort: 'date' | reverse %}
+{% assign publications_by_year = sorted_publications | group_by_exp: 'post', 'post.date | date: "%Y"' %}
+{% for year in publications_by_year %}
+  <h2 class="archive__subtitle">{{ year.name }}</h2>
+  {% for post in year.items %}
+    {% include archive-single.html %}
+  {% endfor %}
 {% endfor %}

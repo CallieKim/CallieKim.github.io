@@ -262,6 +262,27 @@
       scoreEl.style.display = "none";
       cube.visible = false;
       boxGroup.visible = false;
+      // Reset IK solver to current joint state for smooth transition
+      if (window.__ikReady && window.__ikSolver) {
+        try {
+          window.__ikSolver.reset(
+            {
+              origin: { translation: [0, 0, 0], rotation: [1, 0, 0, 0] },
+              joints: {
+                shoulder_pan_joint: shoulderPanJoint.rotation.z,
+                shoulder_lift_joint: shoulderLiftJoint.rotation.z,
+                elbow_joint: elbowJoint.rotation.z,
+                wrist_1_joint: wrist1Joint.rotation.z,
+                wrist_2_joint: wrist2Joint.rotation.z,
+                wrist_3_joint: wrist3Joint.rotation.z,
+              },
+            },
+            [50, 20],
+          );
+        } catch (e) {
+          console.warn("[IK] Reset failed:", e);
+        }
+      }
     }
   });
 
@@ -278,10 +299,24 @@
   // ========== INTERACTIVE MODE STATE ==========
   var targetMouseY = 0.5;
   var currentMouseY = 0.5;
+  var targetMouseX = 0.5;
+  var currentMouseX = 0.5;
   var smoothing = 3.0;
+
+  // IK state — solver is created by ik-loader.js (ES module) and exposed as globals
+  var smoothedTarget = new THREE.Vector3();
+  var ikSceneTarget = new THREE.Vector3();
+  var invRobotMatrix = new THREE.Matrix4();
+  var invRobotMatrixCached = false;
+  var ikInitializedInLoop = false;
 
   document.addEventListener("mousemove", function (e) {
     targetMouseY = e.clientY / window.innerHeight;
+  });
+
+  container.addEventListener("mousemove", function (e) {
+    var rect = container.getBoundingClientRect();
+    targetMouseX = (e.clientX - rect.left) / rect.width;
   });
 
   // ========== SCORE MODE ANIMATION ==========
@@ -303,6 +338,22 @@
     { t: 8.5, j: [0, -0.8, 1.0, -0.3, 0, 0], g: 0 },
   ];
   var cycleDuration = 8.5;
+
+  // IK waypoints: scene-space positions the end-effector should reach
+  // Same cycle timing as FK keyframes, but driven by IK solver
+  var scoreIKWaypoints = [
+    { t: 0.0, pos: [0.0, 0.25, 0.0], g: 0 },     // home / rest
+    { t: 1.5, pos: [0.2, 0.15, 0.15], g: 0 },     // above cube
+    { t: 2.5, pos: [0.2, 0.035, 0.15], g: 0 },    // lower to cube
+    { t: 3.0, pos: [0.2, 0.035, 0.15], g: 0.6 },  // grip closed
+    { t: 3.5, pos: [0.2, 0.15, 0.15], g: 0.6 },   // lift up
+    { t: 5.0, pos: [-0.15, 0.15, 0.18], g: 0.6 }, // above box
+    { t: 5.5, pos: [-0.15, 0.05, 0.18], g: 0.6 }, // lower to box
+    { t: 5.8, pos: [-0.15, 0.05, 0.18], g: 0 },   // release
+    { t: 6.5, pos: [-0.15, 0.15, 0.18], g: 0 },   // retract
+    { t: 7.5, pos: [0.0, 0.25, 0.0], g: 0 },      // return home
+    { t: 8.5, pos: [0.0, 0.25, 0.0], g: 0 },      // dwell
+  ];
 
   function smoothstep(t) {
     t = Math.max(0, Math.min(1, t));
@@ -338,6 +389,36 @@
     return { joints: joints, grip: grip, cycleT: t };
   }
 
+  function getScoreIKState(time) {
+    var ct = time % cycleDuration;
+    var wp0 = scoreIKWaypoints[0];
+    var wp1 = scoreIKWaypoints[0];
+
+    for (var i = 0; i < scoreIKWaypoints.length - 1; i++) {
+      if (ct >= scoreIKWaypoints[i].t && ct < scoreIKWaypoints[i + 1].t) {
+        wp0 = scoreIKWaypoints[i];
+        wp1 = scoreIKWaypoints[i + 1];
+        break;
+      }
+    }
+    if (ct >= scoreIKWaypoints[scoreIKWaypoints.length - 1].t) {
+      wp0 = scoreIKWaypoints[scoreIKWaypoints.length - 1];
+      wp1 = wp0;
+    }
+
+    var seg = wp1.t - wp0.t;
+    var alpha = seg > 0 ? smoothstep((ct - wp0.t) / seg) : 1;
+
+    var pos = [
+      wp0.pos[0] + (wp1.pos[0] - wp0.pos[0]) * alpha,
+      wp0.pos[1] + (wp1.pos[1] - wp0.pos[1]) * alpha,
+      wp0.pos[2] + (wp1.pos[2] - wp0.pos[2]) * alpha,
+    ];
+    var grip = wp0.g + (wp1.g - wp0.g) * alpha;
+
+    return { pos: pos, grip: grip, cycleT: ct };
+  }
+
   // ========== CAMERA ==========
   var camPos = new THREE.Vector3(3.0, 0.6, 2.5);
   var camLook = new THREE.Vector3(0, 0.25, 0);
@@ -353,6 +434,7 @@
   // ========== ANIMATION LOOP ==========
   var clock = new THREE.Clock();
   var wpVec = new THREE.Vector3();
+  var scoreIKTarget = new THREE.Vector3();
 
   function animate() {
     requestAnimationFrame(animate);
@@ -372,31 +454,148 @@
     camLook.lerp(targetCamLook, lerpFactor);
 
     if (currentMode === MODE_INTERACTIVE) {
-      // --- Interactive: cursor-following ---
+      // Smooth mouse
       currentMouseY +=
         (targetMouseY - currentMouseY) * Math.min(1, smoothing * dt);
-      var reach = (currentMouseY - 0.5) * 2;
-      var sway = Math.sin(t * 0.5) * 0.05;
+      currentMouseX +=
+        (targetMouseX - currentMouseX) * Math.min(1, smoothing * dt);
 
-      shoulderPanJoint.rotation.z = Math.sin(t * 0.3) * 0.15;
-      shoulderLiftJoint.rotation.z = -0.8 + reach * 0.8 + sway;
-      elbowJoint.rotation.z = 1.0 - reach * 0.5 + sway * 0.5;
-      wrist1Joint.rotation.z = -0.3 + reach * 0.3;
-      wrist2Joint.rotation.z = Math.sin(t * 0.4) * 0.2;
-      wrist3Joint.rotation.z = Math.sin(t * 0.6) * 0.15;
+      if (window.__ikReady && window.__ikSolver) {
+        // On first IK frame, seed the smoothed target
+        if (!ikInitializedInLoop) {
+          ikInitializedInLoop = true;
+          var state = window.__ikSolver.currentState;
+          if (state && state.frames && state.frames.tool0) {
+            var f = state.frames.tool0.translation;
+            smoothedTarget.set(f[0], f[1], f[2]);
+          }
+        }
 
+        // --- Interactive: IK cursor-following ---
+        // Compute target in scene space — mouse controls height & lateral sweep
+        // Camera views from +X/+Z quadrant; screen-up ~ scene Y, screen-right ~ scene -Z
+        ikSceneTarget.set(
+          -0.08,
+          0.15 + (1.0 - currentMouseY) * 0.4,
+          -0.05 + (currentMouseX - 0.5) * 0.3,
+        );
+
+        // Convert to URDF base frame (robotRoot never moves, so cache inverse)
+        if (!invRobotMatrixCached) {
+          scene.updateMatrixWorld(true);
+          invRobotMatrix.copy(robotRoot.matrixWorld).invert();
+          invRobotMatrixCached = true;
+        }
+        ikSceneTarget.applyMatrix4(invRobotMatrix);
+
+        // Smooth the URDF-frame target
+        smoothedTarget.lerp(ikSceneTarget, Math.min(1, 5 * dt));
+
+        // Solve IK
+        var result = window.__ikSolver.solve(
+          [
+            {
+              Translation: [
+                smoothedTarget.x,
+                smoothedTarget.y,
+                smoothedTarget.z,
+              ],
+            },
+            null,
+            null,
+          ],
+          [50, 20, 10],
+          t,
+          [],
+        );
+
+        // Apply joint angles from solver
+        if (result && result.joints) {
+          var j = result.joints;
+          var sp = j.shoulder_pan_joint;
+          var sl = j.shoulder_lift_joint;
+          var el = j.elbow_joint;
+          var w1 = j.wrist_1_joint;
+          var w2 = j.wrist_2_joint;
+          var w3 = j.wrist_3_joint;
+          shoulderPanJoint.rotation.z = sp != null ? sp : 0;
+          shoulderLiftJoint.rotation.z = sl != null ? sl : 0;
+          elbowJoint.rotation.z = el != null ? el : 0;
+          wrist1Joint.rotation.z = w1 != null ? w1 : 0;
+          wrist2Joint.rotation.z = w2 != null ? w2 : 0;
+          wrist3Joint.rotation.z = w3 != null ? w3 : 0;
+        }
+      } else {
+        // --- FK fallback (before WASM loads) ---
+        var reach = (currentMouseY - 0.5) * 2;
+        var sway = Math.sin(t * 0.5) * 0.05;
+
+        shoulderPanJoint.rotation.z = Math.sin(t * 0.3) * 0.15;
+        shoulderLiftJoint.rotation.z = -0.8 + reach * 0.8 + sway;
+        elbowJoint.rotation.z = 1.0 - reach * 0.5 + sway * 0.5;
+        wrist1Joint.rotation.z = -0.3 + reach * 0.3;
+        wrist2Joint.rotation.z = Math.sin(t * 0.4) * 0.2;
+        wrist3Joint.rotation.z = Math.sin(t * 0.6) * 0.15;
+      }
     } else {
       // --- Score mode: animated pick-and-place ---
       scoreAnimTime += dt;
-      var state = getAnimState(scoreAnimTime);
-      var ct = state.cycleT;
+      var ct = scoreAnimTime % cycleDuration;
 
-      shoulderPanJoint.rotation.z = state.joints[0];
-      shoulderLiftJoint.rotation.z = state.joints[1];
-      elbowJoint.rotation.z = state.joints[2];
-      wrist1Joint.rotation.z = state.joints[3];
-      wrist2Joint.rotation.z = state.joints[4];
-      wrist3Joint.rotation.z = state.joints[5];
+      if (window.__ikReady && window.__ikSolver) {
+        // IK-driven score mode
+        var ikState = getScoreIKState(scoreAnimTime);
+
+        // Ensure invRobotMatrix is cached
+        if (!invRobotMatrixCached) {
+          scene.updateMatrixWorld(true);
+          invRobotMatrix.copy(robotRoot.matrixWorld).invert();
+          invRobotMatrixCached = true;
+        }
+
+        // Convert scene-space target to URDF frame
+        scoreIKTarget.set(ikState.pos[0], ikState.pos[1], ikState.pos[2]);
+        scoreIKTarget.applyMatrix4(invRobotMatrix);
+
+        // Solve IK
+        var result = window.__ikSolver.solve(
+          [
+            {
+              Translation: [
+                scoreIKTarget.x,
+                scoreIKTarget.y,
+                scoreIKTarget.z,
+              ],
+            },
+            null,
+            null,
+          ],
+          [50, 20, 10],
+          t,
+          [],
+        );
+
+        // Apply joint angles from solver
+        if (result && result.joints) {
+          var j = result.joints;
+          shoulderPanJoint.rotation.z = j.shoulder_pan_joint != null ? j.shoulder_pan_joint : 0;
+          shoulderLiftJoint.rotation.z = j.shoulder_lift_joint != null ? j.shoulder_lift_joint : 0;
+          elbowJoint.rotation.z = j.elbow_joint != null ? j.elbow_joint : 0;
+          wrist1Joint.rotation.z = j.wrist_1_joint != null ? j.wrist_1_joint : 0;
+          wrist2Joint.rotation.z = j.wrist_2_joint != null ? j.wrist_2_joint : 0;
+          wrist3Joint.rotation.z = j.wrist_3_joint != null ? j.wrist_3_joint : 0;
+        }
+      } else {
+        // FK fallback (before WASM loads)
+        var fkState = getAnimState(scoreAnimTime);
+
+        shoulderPanJoint.rotation.z = fkState.joints[0];
+        shoulderLiftJoint.rotation.z = fkState.joints[1];
+        elbowJoint.rotation.z = fkState.joints[2];
+        wrist1Joint.rotation.z = fkState.joints[3];
+        wrist2Joint.rotation.z = fkState.joints[4];
+        wrist3Joint.rotation.z = fkState.joints[5];
+      }
 
       // Update world matrices for grip point tracking
       scene.updateMatrixWorld(true);
