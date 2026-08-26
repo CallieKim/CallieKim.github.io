@@ -45,6 +45,15 @@ A collection of projects from my research and undergrad years, spanning robotics
 </div>
 
 <div class="project-card">
+  <img src="/images/ARBudget-interface.png" alt="AR Budgeting Probe" class="project-thumb">
+  <div class="project-title">AR Budgeting Probe</div>
+  <div class="project-overlay">
+    <p>iPad AR budgeting probe using a CreateML model trained on a Roboflow dataset to detect $1, $5, $10, and $20 bills from a camera capture. Detected bills populate an editable panel, and instructions are read aloud with Google Text-to-Speech on tap. One of three probes studying how adults with Down syndrome manage money.</p>
+    <a href="/publication/CHI26-money" class="project-link">View Publication &rarr;</a>
+  </div>
+</div>
+
+<div class="project-card">
   <img src="/images/CoframeAR_title.jpeg" alt="CoframeAR" class="project-thumb">
   <div class="project-title">CoframeAR</div>
   <div class="project-overlay">
