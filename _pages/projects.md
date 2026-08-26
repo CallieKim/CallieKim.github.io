@@ -49,6 +49,7 @@ A collection of projects from my research and undergrad years, spanning robotics
   <div class="project-title">AR Budgeting Probe</div>
   <div class="project-overlay">
     <p>iPad AR budgeting probe using a CreateML model trained to detect bills from a camera capture. Detected bills populate an editable panel, and instructions are read aloud with Google Text-to-Speech on tap. One of three probes studying how adults with Down syndrome manage money.</p>
+    <a href="https://github.com/CallieKim/budget-ar" class="project-link">View Project &rarr;</a>
     <a href="/publication/CHI26-money" class="project-link">View Publication &rarr;</a>
   </div>
 </div>
