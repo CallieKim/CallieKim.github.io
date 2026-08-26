@@ -18,7 +18,7 @@ A collection of projects from my research and undergrad years, spanning robotics
 <div class="project-grid">
 
 <div class="project-card">
-  <img src="/images/robocritics-teaser.png" alt="RoboCritics" class="project-thumb">
+  <img src="/images/RoboCritics-interface.png" alt="RoboCritics" class="project-thumb">
   <div class="project-title">RoboCritics</div>
   <div class="project-overlay">
     <p>An approach that augments LLM-based robot programming with expert-informed motion-level critics that analyze execution traces for safety violations, surface transparent feedback, and offer one-click fixes.</p>
@@ -27,7 +27,16 @@ A collection of projects from my research and undergrad years, spanning robotics
 </div>
 
 <div class="project-card">
-  <img src="/images/roboblocks_title.jpg" alt="RoboBlocks" class="project-thumb">
+  <img src="/images/SHRIMP-interface.png" alt="SHRIMP" class="project-thumb">
+  <div class="project-title">SHRIMP</div>
+  <div class="project-overlay">
+    <p>System that generates hierarchical robot task plans from natural language and lets users iteratively refine them through re-prompting and explicit correction, validating in simulation before execution.</p>
+    <a href="https://wisc-hci.github.io/SHRIMP/" class="project-link">View Project &rarr;</a>
+  </div>
+</div>
+
+<div class="project-card">
+  <img src="/images/RoboBlocks-interface.png" alt="RoboBlocks" class="project-thumb">
   <div class="project-title">RoboBlocks</div>
   <div class="project-overlay">
     <p>Block-based scaffolding system that helps non-expert users express task intent for robot programming.</p>
