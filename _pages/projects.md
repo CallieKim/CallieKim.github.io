@@ -22,6 +22,7 @@ A collection of projects from my research and undergrad years, spanning robotics
   <div class="project-title">RoboCritics</div>
   <div class="project-overlay">
     <p>An approach that augments LLM-based robot programming with expert-informed motion-level critics that analyze execution traces for safety violations, surface transparent feedback, and offer one-click fixes.</p>
+    <a href="https://wisc-hci.github.io/RoboCritics/" class="project-link">View Project &rarr;</a>
   </div>
 </div>
 
